@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/exif-js": "^2.3.1",
     "autoprefixer": "^10.6.0",
+    "canvas": "^3.2.3",
+    "exif-js": "^2.3.0",
     "lucide-react": "^1.45.0",
     "postcss": "^8.5.28",
+    "raw-loader": "^4.0.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3"
