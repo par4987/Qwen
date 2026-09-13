@@ -10,14 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0",
-    "exif-js": "^2.3.0",
-    "file-saver": "^2.0.5",
+    "autoprefixer": "^10.6.0",
     "lucide-react": "^1.45.0",
-    "raw-loader": "^4.0.2",
+    "postcss": "^8.5.28",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-dropzone": "^19.3.0"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@types/node": "^24.13.4",
