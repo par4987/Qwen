@@ -1,72 +1,32 @@
-# AI Photo Editor - Fullstack RAW Editor with AI Agent
+# React + TypeScript + Vite
 
-A professional photo editing application with AI-powered features, similar to Lightroom but simplified. Works locally on your PC with cloud AI services for advanced processing.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## Features
+Currently, two official plugins are available:
 
-### Core Editing
-- **RAW Support**: Full support for all major camera brands (Canon .CR3, Nikon .NEF, Sony .ARW, Fujifilm .RAF, Olympus .ORF, Panasonic .RW2)
-- **Professional Tools**: Histogram, tone curves, HSL adjustments, selective adjustments, masks
-- **Transform Tools**: Crop, rotate, straighten, perspective correction
-- **Non-destructive Editing**: All adjustments are stored as metadata
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-### AI-Powered Features
-- **Smart Masks**: Automatic selection of people, animals, plants, background, landscape
-- **AI Agent**: Chat-based interface to request edits in natural language
-  - Example: "Highlight the bee on the flower, remove lens dirt spots, remove people in background, enhance flower colors"
-- **Object Removal**: Remove unwanted objects, people, or defects
-- **Enhancement**: Auto-enhance colors, lighting, and details
+## React Compiler
 
-### Organization
-- **EXIF GPS**: Extract location data from photos when available
-- **Visual Recognition**: Infer location based on visual elements (beach, mountain, city)
-- **Auto-tagging**: Suggest tags for easy photo organization
-- **Search**: Find photos by content, tags, or location
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### Privacy & Storage
-- **Local-First**: Photos stay on your PC
-- **Cloud AI**: Only send images to cloud when AI processing is required
-- **Multiple AI Options**: Support for OpenAI GPT-4, Claude, Deepseek, Qwen, Kimi, or local models
+## Expanding the Oxlint configuration
 
-## Tech Stack
+If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
 
-- **Frontend**: React + TypeScript + Vite
-- **Styling**: TailwindCSS
-- **Image Processing**: WebAssembly, WebGL, Canvas API
-- **RAW Processing**: rawpy (Python backend) or libraw WASM
-- **AI Integration**: REST APIs for cloud services
-- **State Management**: React Context + Hooks
-
-## Setup
-
-### Installation
-
-```bash
-npm install
-npm run dev
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
 ```
 
-### Configuration
-
-Create a `.env` file in the root directory:
-
-```env
-VITE_OPENAI_API_KEY=your_openai_key_here
-VITE_CLAUDE_API_KEY=your_claude_key_here
-VITE_REPLICATE_API_KEY=your_replicate_key_here
-```
-
-## Cost Estimates
-
-Based on typical usage (100 photos/month with AI editing):
-
-| Service | Monthly Cost | Notes |
-|---------|-------------|-------|
-| OpenAI GPT-4 | ~$5-10 | For chat agent & complex edits |
-| Claude API | ~$5-10 | Alternative to GPT-4 |
-| Replicate (SAM/SDXL) | ~$2-5 | For segmentation & generation |
-| **Total** | **~$12-25** | Varies by usage |
-
-## License
-
-MIT License - Personal Project
+See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
