@@ -10,18 +10,26 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
+    "@imgly/background-removal-node": "^1.4.5",
     "@types/exif-js": "^2.3.1",
+    "@xenova/transformers": "^2.17.2",
     "autoprefixer": "^10.6.0",
     "canvas": "^3.2.3",
     "exif-js": "^2.3.0",
+    "exifreader": "^4.45.0",
+    "geotiff": "^3.0.5",
     "lucide-react": "^1.45.0",
     "postcss": "^8.5.28",
     "raw-loader": "^4.0.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "tailwindcss": "^4.3.3"
+    "sharp": "^0.35.4",
+    "tailwindcss": "^4.3.3",
+    "wasm-imagemagick": "^1.2.8"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.13.4",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
