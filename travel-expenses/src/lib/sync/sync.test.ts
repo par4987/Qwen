@@ -9,11 +9,15 @@ import type { Trip } from '../types'
 import { createGroup, decodeInvite, deleteGroup, encodeInvite, pull, push, SyncError } from './client'
 import { deriveGroupKeys, generateIdentity, open, seal } from './crypto'
 
+// Con RELAY_URL las pruebas se ejecutan contra un servidor externo (p. ej. el Worker de Cloudflare en `wrangler dev`);
+// sin ella se arranca el servidor Node de relay/ en un puerto libre.
+const external = process.env.RELAY_URL
 const dataDir = mkdtempSync(join(tmpdir(), 'mochila-relay-'))
 let server: Server
-let relay = ''
+let relay = external ?? ''
 
 beforeAll(async () => {
+  if (external) return
   process.env.DATA_DIR = dataDir
   // @ts-expect-error módulo JS sin tipos
   const mod = await import('../../../relay/server.mjs')
@@ -93,6 +97,7 @@ describe('sincronización extremo a extremo con el servidor', () => {
     const merged = mergeTrips(tA, back.trips[0])
     expect(merged.expenses.map((e) => e.id)).toEqual(['e2'])
 
+    if (external) return
     // El servidor no contiene nada legible
     const raw = await readFile(join(dataDir, `${g.groupId}.json`), 'utf8')
     expect(raw).not.toContain('Pizza')
@@ -100,7 +105,7 @@ describe('sincronización extremo a extremo con el servidor', () => {
     expect(raw).not.toContain(g.secret)
   })
 
-  it('rechaza accesos sin el secreto y blobs inyectados', async () => {
+  it.skipIf(external)('rechaza accesos sin el secreto y blobs inyectados', async () => {
     const ana = await generateIdentity()
     const g = await createGroup(relay)
     await push(trip(), { ...g, cursor: 0 }, ana)
@@ -119,6 +124,15 @@ describe('sincronización extremo a extremo con el servidor', () => {
     const r = await pull({ ...g, cursor: 0 }, bea)
     expect(r.trips).toHaveLength(1)
     expect(r.rejected).toBe(1)
+  })
+
+  it('rechaza accesos sin el secreto', async () => {
+    const ana = await generateIdentity()
+    const g = await createGroup(relay)
+    await push(trip(), { ...g, cursor: 0 }, ana)
+    await expect(pull({ ...g, secret: 'B'.repeat(43), cursor: 0 }, ana)).rejects.toMatchObject({ status: 401 })
+    const res = await fetch(`${relay}/v1/g/${g.groupId}`)
+    expect(res.status).toBe(401)
   })
 
   it('no se puede recrear un grupo existente ni usarlo tras borrarlo', async () => {

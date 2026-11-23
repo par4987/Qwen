@@ -56,6 +56,9 @@ aunque el creador esté desconectado. Todo funciona sin conexión: los cambios s
 - Que existe un grupo, cuántos dispositivos tiene y cuándo y cuánto escriben (tamaño de los blobs).
 - Las IP de quienes se conectan.
 
+Si el servidor se despliega en Cloudflare Workers, Cloudflare (como proveedor) ve lo mismo que el servidor:
+sólo blobs cifrados y metadatos de conexión. La clave nunca sale de los móviles, así que tampoco puede leer los gastos.
+
 No ve nombres, importes, conceptos, monedas, fechas de los gastos ni el nombre del viaje.
 
 ## Limitaciones conocidas y siguientes pasos

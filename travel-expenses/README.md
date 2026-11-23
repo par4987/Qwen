@@ -54,9 +54,34 @@ PROPS
 npm run android:release    # → app-release.aab (Play Store) y app-release.apk
 ```
 
-## Servidor de sincronización (`relay/`)
+## Servidor de sincronización
 
-Un único archivo sin dependencias (`relay/server.mjs`). Sólo almacena datos cifrados. Despliegue:
+El servidor sólo almacena datos cifrados. Hay dos versiones con la **misma API** (la app funciona igual con cualquiera):
+
+### Opción recomendada: Cloudflare Workers (`relay-cloudflare/`), gratis y sin mantenimiento
+
+Usa un Durable Object por grupo (almacenamiento aislado y escrituras en orden), con límite de peticiones por IP y
+borrado automático de grupos inactivos. Cabe de sobra en el plan gratuito de Cloudflare.
+
+```bash
+cd relay-cloudflare
+npm install
+npx wrangler login          # abre el navegador para autorizar tu cuenta de Cloudflare (gratuita)
+npx wrangler deploy         # → https://mochila-relay.<tu-subdominio>.workers.dev
+```
+
+Después compila la app apuntando a esa dirección para que la proponga por defecto:
+
+```bash
+VITE_RELAY_URL=https://mochila-relay.<tu-subdominio>.workers.dev npm run android:apk
+```
+
+Opciones en `relay-cloudflare/wrangler.toml` (CORS, límites, días de inactividad, App Links). Para probarlo en local:
+`npm run relay:cf:dev` y en otra terminal `npm run test:cf`.
+
+### Alternativa: servidor propio con Node (`relay/`)
+
+Un único archivo sin dependencias (`relay/server.mjs`). Despliegue:
 
 ```bash
 # Local (pruebas; desde el emulador de Android usa http://10.0.2.2:8787)
@@ -93,7 +118,8 @@ src/views/    pantallas: lista de viajes, viaje (gastos, saldos, resumen, ajuste
 src/components/ui.tsx  componentes base
 public/       manifest, icono y service worker
 android/      proyecto nativo Android (Capacitor)
-relay/        servidor de sincronización cifrada (+ Dockerfile)
+relay/        servidor de sincronización cifrada en Node (+ Dockerfile)
+relay-cloudflare/  el mismo servidor para Cloudflare Workers + Durable Objects
 ```
 
 ## Siguientes pasos posibles

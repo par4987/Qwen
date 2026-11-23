@@ -12,7 +12,10 @@
     "android:sync": "npm run build && cap sync android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug",
     "android:release": "npm run android:sync && cd android && ./gradlew bundleRelease assembleRelease",
-    "android:open": "cap open android"
+    "android:open": "cap open android",
+    "relay:cf:dev": "cd relay-cloudflare && npm install && npx wrangler dev --local --port 8788",
+    "relay:cf:deploy": "cd relay-cloudflare && npm install && npx wrangler deploy",
+    "test:cf": "RELAY_URL=http://127.0.0.1:8788 vitest run src/lib/sync"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
