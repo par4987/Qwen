@@ -1,0 +1,14 @@
+{
+  "name": "Mochila · Gastos de viaje compartidos",
+  "short_name": "Mochila",
+  "description": "Registra los gastos de tu viaje y repártelos entre los viajeros.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0d9488",
+  "lang": "es",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
