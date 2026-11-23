@@ -1,4 +1,4 @@
-import { BarChart3, ChevronLeft, Plus, Receipt, Scale, Settings } from 'lucide-react'
+import { BarChart3, ChevronLeft, CloudOff, Plus, Receipt, Scale, Settings, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { cx, toast } from '../components/ui'
 import { today, uid } from '../lib/id'
@@ -14,7 +14,7 @@ import { StatsTab } from './StatsTab'
 
 type Tab = 'expenses' | 'balances' | 'stats' | 'settings'
 
-export function TripView({ trip, onBack }: { trip: Trip; onBack: () => void }) {
+export function TripView({ trip, onBack, onSyncNow }: { trip: Trip; onBack: () => void; onSyncNow: (force?: boolean) => Promise<void> }) {
   const { dispatch, me } = useStore()
   const myId = me[trip.id]
   const [tab, setTab] = useState<Tab>('expenses')
@@ -53,6 +53,15 @@ export function TripView({ trip, onBack }: { trip: Trip; onBack: () => void }) {
           </button>
           <span className="text-2xl">{trip.emoji}</span>
           <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{trip.name}</h1>
+          {trip.sync && (
+            <span
+              className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold"
+              title={trip.sync.lastError ?? 'Grupo cifrado de extremo a extremo'}
+            >
+              {trip.sync.revoked ? <CloudOff size={12} /> : <ShieldCheck size={12} />}
+              {trip.sync.revoked ? 'Sin acceso' : trip.sync.lastError ? 'Pendiente' : 'Cifrado'}
+            </span>
+          )}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white/10 px-3 py-2">
@@ -93,7 +102,7 @@ export function TripView({ trip, onBack }: { trip: Trip; onBack: () => void }) {
         {tab === 'expenses' && <ExpensesTab trip={trip} me={myId} onOpen={(e) => setEditing({ expense: e })} onAdd={() => setEditing({})} />}
         {tab === 'balances' && <BalancesTab trip={trip} me={myId} onSettle={settle} />}
         {tab === 'stats' && <StatsTab trip={trip} me={myId} />}
-        {tab === 'settings' && <SettingsTab trip={trip} onDeleted={onBack} />}
+        {tab === 'settings' && <SettingsTab trip={trip} onDeleted={onBack} onSyncNow={onSyncNow} />}
       </main>
 
       {tab !== 'settings' && (

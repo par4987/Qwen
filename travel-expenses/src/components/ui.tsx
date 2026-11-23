@@ -142,7 +142,7 @@ export function toast(msg: string) {
     el = document.createElement('div')
     el.id = 'toast'
     el.className =
-      'fixed left-1/2 bottom-24 z-[60] -translate-x-1/2 rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg transition-opacity dark:bg-white dark:text-slate-900'
+      'pointer-events-none fixed left-1/2 bottom-24 z-[60] -translate-x-1/2 rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg transition-opacity dark:bg-white dark:text-slate-900'
     document.body.appendChild(el)
   }
   el.textContent = msg

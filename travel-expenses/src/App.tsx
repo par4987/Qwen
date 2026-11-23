@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Avatar, Sheet, toast } from './components/ui'
+import { isNative } from './lib/platform'
 import { decodeTrip } from './lib/share'
 import { useStore } from './lib/store'
+import { useSync } from './lib/sync/useSync'
+import { useJoin } from './views/JoinSheet'
 import { TripList } from './views/TripList'
 import { TripView } from './views/TripView'
 
@@ -19,25 +22,65 @@ export default function App() {
   const { getTrip, dispatch, me } = useStore()
   const [tripId, setTripId] = useState<string | null>(readLast)
   const [askMe, setAskMe] = useState<string | null>(null)
+  const syncTrip = useSync()
+  const meRef = useRef(me)
+  meRef.current = me
 
-  // Importar un viaje recibido por enlace (#import=...)
+  const onJoined = (id: string) => {
+    setTripId(id)
+    if (!meRef.current[id]) setAskMe(id)
+  }
+  const join = useJoin(onJoined)
+  const joinRef = useRef(join)
+  joinRef.current = join
+
+  // Importar un viaje recibido por enlace (#import=...) o unirse con #join=...
   useEffect(() => {
     const handle = () => {
-      const m = window.location.hash.match(/^#import=(.+)$/)
-      if (!m) return
+      const hash = window.location.hash
+      const inv = hash.match(/MOCHILA1\.[A-Za-z0-9_-]+/)
+      const m = hash.match(/^#import=(.+)$/)
+      if (!m && !inv) return
       history.replaceState(null, '', window.location.pathname + window.location.search)
-      const trip = decodeTrip(m[1])
+      if (inv) return void joinRef.current(inv[0])
+      const trip = decodeTrip(m![1])
       if (!trip) return toast('El enlace no es válido o está incompleto')
       const existed = !!getTrip(trip.id)
       dispatch({ type: 'importTrip', trip })
       toast(existed ? 'Cambios del grupo fusionados' : `Te has unido a «${trip.name}»`)
-      setTripId(trip.id)
-      if (!me[trip.id]) setAskMe(trip.id)
+      onJoined(trip.id)
     }
     handle()
     window.addEventListener('hashchange', handle)
     return () => window.removeEventListener('hashchange', handle)
-  }, [getTrip, dispatch, me])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getTrip, dispatch])
+
+  // Android: enlaces mochila://join#... y botón "atrás" del sistema
+  useEffect(() => {
+    if (!isNative) return
+    let cleanup: (() => void) | undefined
+    import('@capacitor/app').then(({ App: CapApp }) => {
+      const subs = [
+        CapApp.addListener('appUrlOpen', ({ url }) => {
+          const inv = url.match(/MOCHILA1\.[A-Za-z0-9_-]+/)
+          if (inv) void joinRef.current(inv[0])
+        }),
+        CapApp.addListener('backButton', () => {
+          if (document.querySelector('[role="dialog"]')) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+          } else if (history.state?.trip) history.back()
+          else void CapApp.minimizeApp()
+        }),
+      ]
+      CapApp.getLaunchUrl().then((r) => {
+        const inv = r?.url.match(/MOCHILA1\.[A-Za-z0-9_-]+/)
+        if (inv) void joinRef.current(inv[0])
+      })
+      cleanup = () => subs.forEach((s) => s.then((h) => h.remove()))
+    })
+    return () => cleanup?.()
+  }, [])
 
   useEffect(() => {
     try {
@@ -48,7 +91,7 @@ export default function App() {
     }
   }, [tripId])
 
-  // Botón "atrás" del móvil vuelve a la lista
+  // Botón "atrás" vuelve a la lista
   useEffect(() => {
     if (!tripId) return
     history.pushState({ trip: tripId }, '')
@@ -62,7 +105,11 @@ export default function App() {
 
   return (
     <>
-      {trip ? <TripView trip={trip} onBack={() => history.back()} /> : <TripList onOpen={setTripId} />}
+      {trip ? (
+        <TripView trip={trip} onBack={() => history.back()} onSyncNow={(force) => syncTrip(trip.id, force)} />
+      ) : (
+        <TripList onOpen={setTripId} onJoined={onJoined} />
+      )}
       {askTrip && (
         <Sheet open onClose={() => setAskMe(null)} title="¿Quién eres?">
           <p className="mb-4 text-sm text-slate-500">Elige tu nombre en «{askTrip.name}» para ver lo que debes o te deben.</p>

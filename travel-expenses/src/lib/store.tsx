@@ -18,6 +18,12 @@ type Action =
   | { type: 'deleteExpense'; tripId: string; expenseId: string }
   | { type: 'importTrip'; trip: Trip }
   | { type: 'setMe'; tripId: string; participantId: string }
+  /** Cambios que no son ediciones del usuario (estado de sincronización): no alteran updatedAt */
+  | { type: 'setSync'; tripId: string; sync: Trip['sync'] }
+  /** Actualiza campos de la configuración de sincronización (sólo si sigue siendo el mismo grupo) */
+  | { type: 'patchSync'; tripId: string; groupId: string; patch: Partial<NonNullable<Trip['sync']>> }
+  /** Fusiona las copias recibidas del grupo con la copia local actual */
+  | { type: 'mergeRemote'; tripId: string; remotes: Trip[] }
 
 function touch(t: Trip): Trip {
   return { ...t, updatedAt: Date.now() }
@@ -27,7 +33,7 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'upsertTrip': {
       const exists = state.trips.some((t) => t.id === action.trip.id)
-      const trip = touch(action.trip)
+      const trip = { ...touch(action.trip), metaUpdatedAt: Date.now() }
       return { ...state, trips: exists ? state.trips.map((t) => (t.id === trip.id ? trip : t)) : [trip, ...state.trips] }
     }
     case 'deleteTrip': {
@@ -52,17 +58,41 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         trips: state.trips.map((t) =>
-          t.id === action.tripId ? touch({ ...t, expenses: t.expenses.filter((e) => e.id !== action.expenseId) }) : t,
+          t.id === action.tripId
+            ? touch({
+                ...t,
+                expenses: t.expenses.filter((e) => e.id !== action.expenseId),
+                deleted: { ...(t.deleted ?? {}), [action.expenseId]: Date.now() },
+              })
+            : t,
         ),
       }
     case 'importTrip': {
       const local = state.trips.find((t) => t.id === action.trip.id)
-      if (!local) return { ...state, trips: [action.trip, ...state.trips] }
+      if (!local) {
+        const { sync: _s, ...clean } = action.trip
+        void _s
+        return { ...state, trips: [clean, ...state.trips] }
+      }
       const merged = mergeTrips(local, action.trip)
       return { ...state, trips: state.trips.map((t) => (t.id === merged.id ? merged : t)) }
     }
     case 'setMe':
       return { ...state, me: { ...state.me, [action.tripId]: action.participantId } }
+    case 'setSync':
+      return { ...state, trips: state.trips.map((t) => (t.id === action.tripId ? { ...t, sync: action.sync } : t)) }
+    case 'patchSync':
+      return {
+        ...state,
+        trips: state.trips.map((t) =>
+          t.id === action.tripId && t.sync?.groupId === action.groupId ? { ...t, sync: { ...t.sync, ...action.patch } } : t,
+        ),
+      }
+    case 'mergeRemote':
+      return {
+        ...state,
+        trips: state.trips.map((t) => (t.id === action.tripId ? action.remotes.reduce((acc, r) => mergeTrips(acc, r), t) : t)),
+      }
   }
 }
 

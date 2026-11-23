@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Copy } from 'lucide-react'
-import { Avatar, Button, Empty, toast } from '../components/ui'
+import { Avatar, Button, Empty } from '../components/ui'
+import { shareText } from '../lib/platform'
 import { formatMoney } from '../lib/money'
 import { computeBalances, settleUp } from '../lib/split'
 import type { Transfer, Trip } from '../lib/types'
@@ -19,18 +20,7 @@ export function BalancesTab({ trip, me, onSettle }: { trip: Trip; me?: string; o
     return lines.join('\n')
   }
 
-  const copy = async () => {
-    const text = summary()
-    try {
-      if (navigator.share) await navigator.share({ text })
-      else {
-        await navigator.clipboard.writeText(text)
-        toast('Resumen copiado')
-      }
-    } catch {
-      /* cancelado */
-    }
-  }
+  const copy = () => shareText({ title: 'Cómo quedamos', text: summary() })
 
   if (trip.expenses.length === 0) return <Empty icon="⚖️" title="Sin movimientos" text="Cuando registres gastos, aquí verás cuánto ha puesto cada uno y quién debe a quién." />
 

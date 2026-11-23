@@ -1,4 +1,4 @@
-import { ChevronRight, Plus, Upload } from 'lucide-react'
+import { ChevronRight, Lock, Plus, ShieldCheck, Upload, UserPlus } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Avatar, Button, Empty, Sheet, toast } from '../components/ui'
 import { formatMoney } from '../lib/money'
@@ -6,6 +6,7 @@ import { isTrip } from '../lib/share'
 import { useStore } from '../lib/store'
 import { computeBalances, totalSpent } from '../lib/split'
 import type { Trip } from '../lib/types'
+import { JoinSheet } from './JoinSheet'
 import { TripForm, newTrip } from './TripForm'
 
 function dateRange(t: Trip) {
@@ -15,9 +16,10 @@ function dateRange(t: Trip) {
   return `${t.expenses.length} movimiento${t.expenses.length === 1 ? '' : 's'}`
 }
 
-export function TripList({ onOpen }: { onOpen: (id: string) => void }) {
+export function TripList({ onOpen, onJoined }: { onOpen: (id: string) => void; onJoined: (id: string) => void }) {
   const { trips, me, dispatch } = useStore()
   const [creating, setCreating] = useState(false)
+  const [joining, setJoining] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const importFile = async (file: File) => {
@@ -40,7 +42,10 @@ export function TripList({ onOpen }: { onOpen: (id: string) => void }) {
           <h1 className="text-2xl font-extrabold tracking-tight">Mochila</h1>
           <p className="text-sm text-slate-500">Gastos de viaje compartidos</p>
         </div>
-        <Button variant="ghost" className="!px-2.5" onClick={() => fileRef.current?.click()} title="Importar copia JSON">
+        <Button variant="ghost" className="!px-2.5" onClick={() => setJoining(true)} title="Unirse a un grupo" aria-label="Unirse a un grupo">
+          <UserPlus size={18} />
+        </Button>
+        <Button variant="ghost" className="!px-2.5" onClick={() => fileRef.current?.click()} title="Importar copia JSON" aria-label="Importar copia JSON">
           <Upload size={18} />
         </Button>
         <input
@@ -63,9 +68,14 @@ export function TripList({ onOpen }: { onOpen: (id: string) => void }) {
             title="¿A dónde vais?"
             text="Crea un viaje, añade a tus compañeros y apuntad los gastos. Sin registro, sin anuncios y sin límite de gastos."
             action={
-              <Button onClick={() => setCreating(true)}>
-                <Plus size={18} /> Crear mi primer viaje
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => setCreating(true)}>
+                  <Plus size={18} /> Crear mi primer viaje
+                </Button>
+                <Button variant="secondary" onClick={() => setJoining(true)}>
+                  <Lock size={16} /> Tengo una invitación
+                </Button>
+              </div>
             }
           />
           <ul className="grid gap-3 border-t border-slate-100 p-5 text-sm text-slate-600 sm:grid-cols-2 dark:border-slate-800 dark:text-slate-300">
@@ -73,7 +83,7 @@ export function TripList({ onOpen }: { onOpen: (id: string) => void }) {
             <li>➗ Reparto igual, por partes, % o importes</li>
             <li>🤝 Mínimo de pagos para saldar deudas</li>
             <li>📶 Funciona sin conexión</li>
-            <li>🔗 Comparte con un enlace, sin cuentas</li>
+            <li>🔐 Grupos cifrados de extremo a extremo</li>
             <li>📤 Exporta a Excel</li>
           </ul>
         </div>
@@ -87,7 +97,10 @@ export function TripList({ onOpen }: { onOpen: (id: string) => void }) {
                 <button onClick={() => onOpen(t.id)} className="card flex w-full items-center gap-3 p-4 text-left transition hover:shadow-md active:scale-[0.99]">
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-2xl dark:bg-brand-700/30">{t.emoji}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-bold">{t.name}</span>
+                    <span className="flex items-center gap-1 truncate font-bold">
+                      {t.name}
+                      {t.sync && !t.sync.revoked && <ShieldCheck size={14} className="shrink-0 text-emerald-600" aria-label="Grupo cifrado" />}
+                    </span>
                     <span className="block text-xs text-slate-500">{dateRange(t)}</span>
                     <span className="mt-1.5 flex -space-x-1.5">
                       {t.participants.slice(0, 6).map((p) => (
@@ -123,6 +136,8 @@ export function TripList({ onOpen }: { onOpen: (id: string) => void }) {
           <Plus size={22} /> Nuevo viaje
         </button>
       )}
+
+      {joining && <JoinSheet onClose={() => setJoining(false)} onJoined={onJoined} />}
 
       <Sheet open={creating} onClose={() => setCreating(false)} title="Nuevo viaje">
         <TripForm

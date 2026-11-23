@@ -1,52 +1,38 @@
 import { Download, FileJson, Link2, Share2, Trash2 } from 'lucide-react'
 import { Avatar, Button, cx, toast } from '../components/ui'
-import { download, tripToCsv } from '../lib/csv'
+import { tripToCsv } from '../lib/csv'
+import { copyText, saveFile, shareText } from '../lib/platform'
 import { useStore } from '../lib/store'
-import { shareUrl } from '../lib/share'
+import { publicTrip, shareUrl } from '../lib/share'
 import type { Trip } from '../lib/types'
+import { GroupSection } from './GroupSection'
 import { TripForm } from './TripForm'
 
 function slug(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'viaje'
 }
 
-export function SettingsTab({ trip, onDeleted }: { trip: Trip; onDeleted: () => void }) {
+export function SettingsTab({ trip, onDeleted, onSyncNow }: { trip: Trip; onDeleted: () => void; onSyncNow: (force?: boolean) => Promise<void> }) {
   const { dispatch, me } = useStore()
   const myId = me[trip.id]
 
-  const shareLink = async () => {
-    const url = shareUrl(trip)
-    try {
-      if (navigator.share) await navigator.share({ title: `${trip.emoji} ${trip.name}`, text: `Únete a las cuentas de «${trip.name}» en Mochila`, url })
-      else {
-        await navigator.clipboard.writeText(url)
-        toast('Enlace copiado')
-      }
-    } catch {
-      /* cancelado */
-    }
-  }
-
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl(trip))
-      toast('Enlace copiado')
-    } catch {
-      toast('No se pudo copiar')
-    }
-  }
+  const shareLink = () =>
+    shareText({ title: `${trip.emoji} ${trip.name}`, text: `Copia de las cuentas de «${trip.name}» en Mochila`, url: shareUrl(trip) })
+  const copyLink = () => copyText(shareUrl(trip), 'Enlace copiado')
 
   return (
     <div className="space-y-6">
+      <GroupSection trip={trip} onSyncNow={onSyncNow} />
+
       <section className="card p-4">
-        <h3 className="text-sm font-bold">Compartir con el grupo</h3>
+        <h3 className="text-sm font-bold">Enviar una copia (sin sincronizar)</h3>
         <p className="mt-1 text-xs text-slate-500">
-          Sin cuentas ni registro: envía el enlace por WhatsApp, Telegram o email. Quien lo abra tendrá una copia del viaje, y cuando
-          te reenvíen su enlace actualizado, Mochila fusiona los cambios de ambos automáticamente.
+          Alternativa sin servidor: el viaje completo va dentro del enlace. Quien lo abra tendrá una copia, y si te reenvía su enlace
+          actualizado, Mochila fusiona los cambios. Ojo: cualquiera con el enlace puede leer el viaje.
         </p>
         <div className="mt-3 flex gap-2">
           <Button className="flex-1" onClick={shareLink}>
-            <Share2 size={16} /> Compartir enlace
+            <Share2 size={16} /> Enviar copia
           </Button>
           <Button variant="secondary" onClick={copyLink} aria-label="Copiar enlace">
             <Link2 size={16} />
@@ -90,10 +76,10 @@ export function SettingsTab({ trip, onDeleted }: { trip: Trip; onDeleted: () => 
         <h3 className="text-sm font-bold">Exportar</h3>
         <p className="mt-1 text-xs text-slate-500">Hoja de cálculo con todos los movimientos y la parte de cada uno, o copia de seguridad completa.</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={() => download(`${slug(trip.name)}.csv`, tripToCsv(trip), 'text/csv;charset=utf-8')}>
+          <Button variant="secondary" onClick={() => saveFile(`${slug(trip.name)}.csv`, tripToCsv(trip), 'text/csv;charset=utf-8')}>
             <Download size={16} /> CSV / Excel
           </Button>
-          <Button variant="secondary" onClick={() => download(`${slug(trip.name)}.mochila.json`, JSON.stringify(trip, null, 2), 'application/json')}>
+          <Button variant="secondary" onClick={() => saveFile(`${slug(trip.name)}.mochila.json`, JSON.stringify(publicTrip(trip), null, 2), 'application/json')}>
             <FileJson size={16} /> Copia JSON
           </Button>
         </div>
