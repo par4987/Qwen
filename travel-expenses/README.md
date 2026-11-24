@@ -70,7 +70,8 @@ npx wrangler login          # abre el navegador para autorizar tu cuenta de Clou
 npx wrangler deploy         # → https://mochila-relay.<tu-subdominio>.workers.dev
 ```
 
-Después compila la app apuntando a esa dirección para que la proponga por defecto:
+La app ya trae como servidor por defecto el desplegado para este proyecto
+(`https://mochila-relay.mochila-relay-cloudflare.workers.dev`). Para usar otro, compila la app apuntando a esa dirección:
 
 ```bash
 VITE_RELAY_URL=https://mochila-relay.<tu-subdominio>.workers.dev npm run android:apk

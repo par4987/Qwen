@@ -9,11 +9,13 @@ import { safetyCode } from '../lib/sync/crypto'
 import type { Trip } from '../lib/types'
 
 const RELAY_KEY = 'mochila.relay'
+/** Servidor oficial (Cloudflare Workers). Se puede cambiar al compilar con VITE_RELAY_URL o en la propia app. */
+const BUILT_IN_RELAY = import.meta.env.VITE_RELAY_URL || 'https://mochila-relay.mochila-relay-cloudflare.workers.dev'
 export function defaultRelay(): string {
   try {
-    return localStorage.getItem(RELAY_KEY) || import.meta.env.VITE_RELAY_URL || ''
+    return localStorage.getItem(RELAY_KEY) || BUILT_IN_RELAY
   } catch {
-    return import.meta.env.VITE_RELAY_URL || ''
+    return BUILT_IN_RELAY
   }
 }
 
