@@ -1,0 +1,31 @@
+# Mochila Relay en Cloudflare Workers (plan gratuito).
+# Despliegue: npx wrangler login && npm run deploy
+name = "mochila-relay"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+# Un Durable Object por grupo: almacenamiento aislado y escrituras serializadas.
+# El plan gratuito sólo admite Durable Objects con SQLite (new_sqlite_classes).
+[[durable_objects.bindings]]
+name = "GROUPS"
+class_name = "GroupStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GroupStore"]
+
+# Límite de peticiones por IP (240 por minuto).
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "4987"
+simple = { limit = 240, period = 60 }
+
+[vars]
+# Orígenes CORS permitidos separados por comas, o * (la autenticación es por token, no por cookies).
+ALLOWED_ORIGINS = "*"
+MAX_BLOB_BYTES = "1048576"
+MAX_DEVICES = "64"
+GROUP_TTL_DAYS = "400"
+# Para App Links de Android (opcional):
+# ANDROID_PACKAGE = "app.mochila.gastos"
+# ANDROID_CERT_SHA256 = "AA:BB:..."
